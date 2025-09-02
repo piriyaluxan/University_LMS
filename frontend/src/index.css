@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* University LMS Design System - Professional Enterprise Theme */
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 214 32% 17%;
+
+    /* LMS Primary Colors */
+    --primary: 221 83% 36%;        /* #1E40AF - Primary Blue */
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 221 83% 45%;
+    --primary-dark: 221 83% 28%;
+
+    /* LMS Secondary Colors */
+    --secondary: 199 89% 41%;      /* #0284C7 - Secondary Cyan */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 199 89% 50%;
+
+    /* LMS Neutral Colors */
+    --sidebar: 215 25% 17%;        /* #1F2937 - Dark Gray */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-muted: 215 25% 25%;
+
+    /* Background variants */
+    --surface: 213 27% 95%;        /* #F3F4F6 - Light Gray */
+    --surface-foreground: 215 25% 17%;
+
+    --card: 0 0% 100%;             /* #FFFFFF - White */
+    --card-foreground: 215 25% 17%;
+
+    /* Status colors */
+    --success: 158 64% 37%;        /* #10B981 - Green */
+    --success-foreground: 0 0% 100%;
+    --success-light: 158 64% 45%;
+
+    --destructive: 0 84% 60%;      /* #EF4444 - Red */
+    --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 84% 68%;
+
+    --warning: 48 96% 53%;         /* #FACC15 - Yellow */
+    --warning-foreground: 26 83% 14%;
+    --warning-light: 48 96% 62%;
+
+    /* Interactive states */
+    --muted: 213 27% 95%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 199 89% 41%;
+    --accent-foreground: 0 0% 100%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 17%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 36%;
+
+    --radius: 0.5rem;
+
+    /* LMS Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
+    --gradient-surface: linear-gradient(180deg, hsl(var(--background)), hsl(var(--surface)));
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 hsl(var(--sidebar) / 0.1), 0 1px 2px 0 hsl(var(--sidebar) / 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(var(--sidebar) / 0.1), 0 4px 6px -2px hsl(var(--sidebar) / 0.05);
+    --shadow-glow: 0 0 0 1px hsl(var(--ring) / 0.05);
+
+    /* Sidebar specific tokens */
+    --sidebar-background: hsl(var(--sidebar));
+    --sidebar-foreground: hsl(var(--sidebar-foreground));
+    --sidebar-primary: hsl(var(--secondary));
+    --sidebar-primary-foreground: hsl(var(--secondary-foreground));
+    --sidebar-accent: hsl(var(--sidebar-muted));
+    --sidebar-accent-foreground: hsl(var(--sidebar-foreground));
+    --sidebar-border: hsl(var(--sidebar-muted));
+    --sidebar-ring: hsl(var(--secondary));
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
