@@ -1,4 +1,4 @@
-# EAD Learning Management System (LMS)
+# Learning Management System (LMS)
 
 A comprehensive Learning Management System built with Node.js, Express, MongoDB, and React with TypeScript.
 
@@ -32,7 +32,7 @@ A comprehensive Learning Management System built with Node.js, Express, MongoDB,
 
 ```bash
 git clone <repository-url>
-cd EAD-LMS
+cd University_LMS
 ```
 
 ### 2. Backend Setup
