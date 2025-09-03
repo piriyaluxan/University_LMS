@@ -237,43 +237,4 @@ npm run build       # Build for production
 npm run preview     # Preview production build
 ```
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-
-   - Ensure MongoDB is running
-   - Check connection string in `config.env`
-   - Verify MongoDB port (default: 27017)
-
-2. **Port Already in Use**
-
-   - Change PORT in `config.env`
-   - Kill processes using the port
-
-3. **CORS Issues**
-
-   - Check CORS_ORIGIN in `config.env`
-   - Ensure frontend URL matches
-
-4. **File Upload Issues**
-   - Check `uploads/` directory permissions
-   - Verify file size limits
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📞 Support
-
-For support and questions, please contact the development team or create an issue in the repository.
 
