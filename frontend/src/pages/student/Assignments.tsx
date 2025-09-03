@@ -76,6 +76,7 @@ const Assignments = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>(
     courseId || "all"
   );
@@ -88,10 +89,14 @@ const Assignments = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    fetchAssignments();
+    fetchEnrollments();
     fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    fetchAssignments();
     fetchSubmissions();
-  }, [selectedCourse]);
+  }, [selectedCourse, enrolledCourseIds.join(",")]);
 
   const fetchAssignments = async () => {
     try {
@@ -101,7 +106,13 @@ const Assignments = () => {
           ? "/api/assignments/enrolled"
           : `/api/assignments?course=${selectedCourse}`;
       const response = await apiFetch(endpoint);
-      setAssignments(response.data || []);
+      let items = response.data || [];
+      if (selectedCourse === "all" && (!items || items.length === 0)) {
+        // Fallback: show all assignments if none for enrolled courses
+        const allRes = await apiFetch("/api/assignments");
+        items = allRes.data || [];
+      }
+      setAssignments(items);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -123,6 +134,16 @@ const Assignments = () => {
         title: "Error",
         description: error.message || "Failed to fetch courses",
       });
+    }
+  };
+
+  const fetchEnrollments = async () => {
+    try {
+      const res = await apiFetch("/api/enrollments/student/me");
+      const ids = (res.data || []).map((e: any) => e.course?._id).filter(Boolean);
+      setEnrolledCourseIds(ids);
+    } catch (_err) {
+      setEnrolledCourseIds([]);
     }
   };
 
@@ -309,6 +330,7 @@ const Assignments = () => {
             {filteredAssignments.map((assignment) => {
               const submission = getSubmissionStatus(assignment._id);
 
+              const isEnrolled = enrolledCourseIds.includes(assignment.course._id);
               return (
                 <Card
                   key={assignment._id}
@@ -396,6 +418,7 @@ const Assignments = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={!isEnrolled}
                               onClick={() => setSelectedAssignment(assignment)}
                             >
                               <Upload className="w-4 h-4 mr-2" />
@@ -437,6 +460,11 @@ const Assignments = () => {
                             </div>
                           </DialogContent>
                         </Dialog>
+                      )}
+                      {!isEnrolled && (
+                        <span className="text-xs text-muted-foreground self-center">
+                          Enroll in this course to submit
+                        </span>
                       )}
                     </div>
                   </CardContent>

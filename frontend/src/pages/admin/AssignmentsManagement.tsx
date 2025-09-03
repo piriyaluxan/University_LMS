@@ -21,6 +21,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   ClipboardCheck,
   Plus,
   Search,
@@ -74,6 +80,10 @@ const AssignmentsManagement = () => {
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(
     null
   );
+  const [isSubmissionsOpen, setIsSubmissionsOpen] = useState(false);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [selectedAssignmentForSubmissions, setSelectedAssignmentForSubmissions] =
+    useState<Assignment | null>(null);
 
   const [newAssignment, setNewAssignment] = useState({
     title: "",
@@ -102,6 +112,28 @@ const AssignmentsManagement = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const openSubmissions = async (assignment: Assignment) => {
+    try {
+      setSelectedAssignmentForSubmissions(assignment);
+      const res = await apiFetch(`/api/assignments/${assignment._id}/submissions`);
+      setSubmissions(res.data || []);
+      setIsSubmissionsOpen(true);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to load submissions" });
+    }
+  };
+
+  const deleteSubmission = async (submissionId: string) => {
+    if (!selectedAssignmentForSubmissions) return;
+    try {
+      await apiFetch(`/api/assignments/${selectedAssignmentForSubmissions._id}/submissions/${submissionId}`, { method: "DELETE" });
+      setSubmissions((prev) => prev.filter((s) => s._id !== submissionId));
+      toast({ title: "Deleted", description: "Submission deleted", className: "bg-success text-success-foreground" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to delete submission" });
     }
   };
 
@@ -234,6 +266,27 @@ const AssignmentsManagement = () => {
 
   const getStatusIcon = () => {
     return <CheckCircle className="w-5 h-5 text-success" />;
+  };
+
+  const gradeSubmission = async (
+    submissionId: string,
+    payload: { grade?: string; remarks?: string }
+  ) => {
+    if (!selectedAssignmentForSubmissions) return;
+    try {
+      const res = await apiFetch(
+        `/api/assignments/${selectedAssignmentForSubmissions._id}/submissions/${submissionId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      setSubmissions((prev) => prev.map((s) => (s._id === submissionId ? res.data : s)));
+      toast({ title: "Saved", description: "Submission updated", className: "bg-success text-success-foreground" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to update submission" });
+    }
   };
 
   const isDueSoon = (dueDate: string) => {
@@ -464,7 +517,7 @@ const AssignmentsManagement = () => {
                       : ""
                   }`}
                 >
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-4 cursor-pointer" onClick={() => openSubmissions(assignment)}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         {getStatusIcon()}
@@ -528,7 +581,12 @@ const AssignmentsManagement = () => {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => openSubmissions(assignment)}
+                      >
                         <Eye className="w-4 h-4 mr-2" />
                         View Submissions
                       </Button>
@@ -576,8 +634,90 @@ const AssignmentsManagement = () => {
           )}
         </div>
       </main>
+      {/* Submissions Drawer */}
+      <Sheet open={isSubmissionsOpen} onOpenChange={setIsSubmissionsOpen}>
+        <SheetContent side="right" className="w-full sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle>
+              {selectedAssignmentForSubmissions
+                ? `Submissions • ${selectedAssignmentForSubmissions.title}`
+                : "Submissions"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-3">
+            {submissions.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No submissions yet.</div>
+            ) : (
+              submissions.map((s) => (
+                <div key={s._id} className="p-3 border rounded-md bg-white flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-sidebar truncate">
+                      {s.student?.firstName} {s.student?.lastName}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{s.student?.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(s.submittedAt).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-secondary truncate">{s.originalName}</div>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Grade"
+                        value={s.grade || ""}
+                        onChange={(e) =>
+                          setSubmissions((prev) =>
+                            prev.map((x) => (x._id === s._id ? { ...x, grade: e.target.value } : x))
+                          )
+                        }
+                        className="h-8 w-24"
+                      />
+                      <Input
+                        placeholder="Remarks"
+                        value={s.remarks || ""}
+                        onChange={(e) =>
+                          setSubmissions((prev) =>
+                            prev.map((x) => (x._id === s._id ? { ...x, remarks: e.target.value } : x))
+                          )
+                        }
+                        className="h-8"
+                      />
+                      <Button size="sm" onClick={() => gradeSubmission(s._id, { grade: s.grade, remarks: s.remarks })}>
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (!selectedAssignmentForSubmissions) return;
+                        const url = `${window.location.origin}/api/assignments/${selectedAssignmentForSubmissions._id}/submissions/${s._id}/download`;
+                        window.open(url, "_blank");
+                      }}
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive"
+                      onClick={() => deleteSubmission(s._id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
 
 export default AssignmentsManagement;
+// Submissions Drawer UI
+// Placed at end of component render before export
+// Note: Keep minimal to avoid layout shifts
+

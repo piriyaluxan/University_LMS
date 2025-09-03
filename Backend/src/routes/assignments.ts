@@ -289,6 +289,55 @@ router.get(
   }
 );
 
+// @desc    Grade/Review a submission
+// @route   PATCH /api/assignments/:assignmentId/submissions/:submissionId
+// @access  Private (admin/instructor)
+router.patch(
+  "/:assignmentId/submissions/:submissionId",
+  protect,
+  authorize("admin", "instructor"),
+  async (req, res) => {
+    try {
+      const { grade, remarks } = req.body as { grade?: string; remarks?: string };
+      const submission = await Submission.findByIdAndUpdate(
+        req.params.submissionId,
+        { grade, remarks },
+        { new: true }
+      ).populate("student", "firstName lastName email studentId");
+      if (!submission) {
+        res.status(404).json({ success: false, error: "Submission not found" });
+        return;
+      }
+      res.json({ success: true, data: submission });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Server error" });
+    }
+  }
+);
+
+// @desc    Delete a submission (admin)
+// @route   DELETE /api/assignments/:assignmentId/submissions/:submissionId
+// @access  Private (admin)
+router.delete(
+  "/:assignmentId/submissions/:submissionId",
+  protect,
+  authorize("admin"),
+  async (req, res) => {
+    try {
+      const submission = await Submission.findByIdAndDelete(
+        req.params.submissionId
+      );
+      if (!submission) {
+        res.status(404).json({ success: false, error: "Submission not found" });
+        return;
+      }
+      res.json({ success: true, message: "Submission deleted" });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Server error" });
+    }
+  }
+);
+
 // @desc    Get all submissions for current user (student)
 // @route   GET /api/assignments/submissions
 // @access  Private

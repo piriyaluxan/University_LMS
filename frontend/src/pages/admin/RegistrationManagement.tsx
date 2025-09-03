@@ -88,6 +88,9 @@ const RegistrationManagement = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [instructors, setInstructors] = useState<
+    Array<{ id: string; firstName: string; lastName: string; email: string; isActive?: boolean }>
+  >([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,6 +105,7 @@ const RegistrationManagement = () => {
     password: "",
     department: "",
   });
+  const [selectedInstructorCourses, setSelectedInstructorCourses] = useState<string[]>([]);
   const [isCreatingInstructor, setIsCreatingInstructor] = useState(false);
 
   // Load students, courses, and current registrations
@@ -131,6 +135,19 @@ const RegistrationManagement = () => {
           code: c.code,
           capacity: c.capacity,
           enrolled: c.enrolled,
+        }))
+      );
+
+      // Load instructors
+      const instructorsRes = await apiFetch<UsersResponse>(
+        `/api/users?role=instructor&limit=200`
+      );
+      setInstructors(
+        instructorsRes.data.map((u) => ({
+          id: u._id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
         }))
       );
 
@@ -274,7 +291,7 @@ const RegistrationManagement = () => {
 
     setIsCreatingInstructor(true);
     try {
-      await apiFetch("/api/users", {
+      const created: any = await apiFetch("/api/users", {
         method: "POST",
         body: JSON.stringify({
           ...instructorData,
@@ -284,6 +301,15 @@ const RegistrationManagement = () => {
           "Content-Type": "application/json",
         },
       });
+
+      // Assign selected courses to instructor if any selected
+      if (selectedInstructorCourses.length > 0 && created?.data?.id) {
+        await apiFetch(`/api/users/${created.data.id}/instructor-courses`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseIds: selectedInstructorCourses }),
+        });
+      }
 
       toast({
         title: "Instructor Created",
@@ -299,6 +325,7 @@ const RegistrationManagement = () => {
         password: "",
         department: "",
       });
+      setSelectedInstructorCourses([]);
       setIsInstructorMode(false);
     } catch (error: any) {
       toast({
@@ -538,7 +565,30 @@ const RegistrationManagement = () => {
                 </div>
               ) : (
                 // Instructor Registration Form
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-6">
+                  {/* Instructors List */}
+                  <div>
+                    <Label className="mb-2 block">Registered Instructors</Label>
+                    <div className="border rounded-md bg-white overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+                        {instructors.length === 0 ? (
+                          <div className="p-4 text-sm text-muted-foreground">No instructors found.</div>
+                        ) : (
+                          instructors.map((inst) => (
+                            <div key={inst.id} className="p-4">
+                              <div className="font-medium text-sidebar">
+                                {inst.firstName} {inst.lastName}
+                              </div>
+                              <div className="text-sm text-muted-foreground">{inst.email}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Create Instructor Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>First Name *</Label>
                     <Input
@@ -611,6 +661,34 @@ const RegistrationManagement = () => {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <Label>Assign Courses (optional)</Label>
+                    <div className="border rounded-md p-2 max-h-56 overflow-auto bg-white">
+                      {courses.map((course) => {
+                        const checked = selectedInstructorCourses.includes(course.id);
+                        return (
+                          <label key={course.id} className="flex items-center gap-2 py-1">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                setSelectedInstructorCourses((prev) =>
+                                  e.target.checked
+                                    ? [...prev, course.id]
+                                    : prev.filter((id) => id !== course.id)
+                                );
+                              }}
+                            />
+                            <span className="text-sm">
+                              {course.title} <span className="text-muted-foreground">({course.code})</span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground">You can also assign or change courses later.</p>
+                  </div>
+
                   <div className="space-y-2 flex items-end">
                     <Button
                       onClick={handleCreateInstructor}
@@ -627,6 +705,7 @@ const RegistrationManagement = () => {
                       )}
                     </Button>
                   </div>
+                </div>
                 </div>
               )}
             </CardContent>

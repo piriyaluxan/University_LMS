@@ -1,6 +1,7 @@
 import express from "express";
 import { User } from "../models/User";
 import { protect, authorize } from "../middleware/auth";
+import { Course } from "../models/Course";
 
 const router = express.Router();
 
@@ -214,5 +215,56 @@ router.patch("/:id/status", protect, authorize("admin"), async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 });
+
+// @desc    Assign courses to an instructor (replace assignment set)
+// @route   PATCH /api/users/:id/instructor-courses
+// @access  Private/Admin
+router.patch(
+  "/:id/instructor-courses",
+  protect,
+  authorize("admin"),
+  async (req, res) => {
+    try {
+      const instructorId = req.params.id;
+      const { courseIds } = req.body as { courseIds: string[] };
+
+      const instructor = await User.findById(instructorId);
+      if (!instructor || instructor.role !== "instructor") {
+        res
+          .status(404)
+          .json({ success: false, error: "Instructor not found" });
+        return;
+      }
+
+      const courses = await Course.find({ _id: { $in: courseIds || [] } });
+      if ((courseIds || []).length !== courses.length) {
+        res
+          .status(400)
+          .json({ success: false, error: "One or more courses invalid" });
+        return;
+      }
+
+      // Unassign any courses currently linked to this instructor that are not requested
+      await Course.updateMany(
+        { instructor: instructorId, _id: { $nin: courseIds || [] } },
+        { $set: { instructor: instructorId } }
+      );
+
+      // Assign requested courses to instructor
+      await Course.updateMany(
+        { _id: { $in: courseIds || [] } },
+        { $set: { instructor: instructorId } }
+      );
+
+      const updated = await Course.find({ instructor: instructorId }).select(
+        "title code instructor"
+      );
+
+      res.json({ success: true, data: updated });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Server error" });
+    }
+  }
+);
 
 export default router;

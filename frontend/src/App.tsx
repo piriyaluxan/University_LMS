@@ -18,6 +18,7 @@ import CourseMaterials from "./pages/student/CourseMaterials";
 import Assignments from "./pages/student/Assignments";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SetPassword from "./pages/SetPassword";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/set-password" element={<SetPassword />} />
           <Route path="/register" element={<Register />} />
 
           {/* Admin Routes */}

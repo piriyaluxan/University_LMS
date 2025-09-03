@@ -66,8 +66,8 @@ router.post(
         }, hasPassword: ${!!user.password}`
       );
 
-      // For students, check if they have a password set
-      if (role === "student" && !user.password) {
+      // For students and instructors, check if they have a password set
+      if ((role === "student" || role === "instructor") && !user.password) {
         res.status(401).json({
           success: false,
           error: "Password not set",
@@ -146,12 +146,12 @@ router.post(
 
       const { email, newPassword } = req.body;
 
-      // Find the student user
-      const user = await User.findOne({ email, role: "student" });
+      // Find the user (student or instructor)
+      const user = await User.findOne({ email, role: { $in: ["student", "instructor"] } });
       if (!user) {
         res.status(404).json({
           success: false,
-          error: "Student not found",
+          error: "User not found",
         });
         return;
       }

@@ -65,11 +65,23 @@ const Login = () => {
         navigate("/instructor/dashboard");
       else navigate("/student");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid credentials.",
-      });
+      const message = error?.message || "Invalid credentials.";
+      if (
+        message.toLowerCase().includes("password not set") &&
+        (formData.role === "student" || formData.role === "instructor")
+      ) {
+        toast({
+          title: "Set Password Required",
+          description: "Please set your password to continue.",
+        });
+        navigate(`/set-password?email=${encodeURIComponent(formData.email)}`);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: message,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -185,13 +197,13 @@ const Login = () => {
               <br />
               <span className="font-medium">Password:</span> password123
             </p>
-            <button
-              onClick={() => navigate("/register")}
-              className="text-primary hover:underline"
-              type="button"
-            >
-              Create a student account
-            </button>
+         {/* <button
+            onClick={() => navigate("/register")}
+            className="text-primary hover:underline"
+            type="button"
+          >
+            Create a student account
+          </button>*/}
           </div>
         </CardContent>
       </Card>
