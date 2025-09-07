@@ -31,7 +31,7 @@ A comprehensive Learning Management System built with Node.js, Express, MongoDB,
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/piriyaluxan/University_LMS.git
 cd University_LMS
 ```
 
